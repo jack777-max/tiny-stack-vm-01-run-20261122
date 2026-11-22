@@ -5,6 +5,10 @@
 import{readdirSync,readFileSync,writeFileSync,mkdirSync}from'node:fs';
 import{join}from'node:path';
 const K=[1,18,66,5,7,11,12,16,0,0,0,0,0,0,0,0,10,10,10,10,10,10,10,6,10,10,10,6,10,10,10,0,10,10,10,0,0,0,0,0,0,0,0,0,0,0,0,0,33,37,37,33,1,0,0,0,0,0,0,0,0,0,0,0,6,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,5,2,5];
+// Decoded once up front so the dispatch loop reads im/po/pu straight from tables
+// instead of unpacking K's bit fields on every executed instruction.
+const IM=new Int8Array(84),PO=new Int8Array(84),PU=new Int8Array(84);
+for(let i=0;i<84;i++){const v=K[i]?K[i]-1:0;IM[i]=v>>4;PO[i]=v>>2&3;PU[i]=v&3}
 function run(p,q){
  const D=new Int32Array(256),C=new Int32Array(64),M=new Int32Array(256),o=new Uint8Array(65536);
  let s=0,c=0,pc=0,st=0,ip=0,ol=0;const n=p.length;
@@ -14,7 +18,7 @@ function run(p,q){
   if(pc<0||pc>=n)return T(9);
   const op=p[pc],k=K[op]||0;
   if(!k)return T(5);
-  const im=(k-1)>>4,po=(k-1)>>2&3,pu=(k-1)&3;
+  const im=IM[op],po=PO[op],pu=PU[op];
   if(pc+im>=n)return T(9);
   st++;const nx=pc+1+im;
   if(s<po)return T(2);
